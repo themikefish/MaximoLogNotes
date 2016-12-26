@@ -1,0 +1,208 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
+{
+    class Program 
+    {
+        private Dictionary<string, int> _nGramCounts { get; set; } = new Dictionary<string, int>();
+        static void Main(string[] args) // main method
+        {
+            Console.WriteLine("Starting...");
+            new Program();
+            Console.WriteLine("Done.");
+            Console.Read();
+        }
+
+        private Program()  // the constructor. like a special kind of method. instanciates a program object
+        {
+            //config
+            var minNWordGram = 3;
+            var maxNWordGram = 8;
+            var minOccurences = 50;
+
+            var outputFileName = $@"C:\Users\fishm\Desktop\{DateTime.Now:yyyyMMddHHmmss}_testOutput.csv";
+            var pathToTextFile = @"C:\Users\fishm\Desktop\DUMP.csv";
+            var TextFromFile = File.ReadAllLines(pathToTextFile); // reads all lines into atring array
+
+            Console.WriteLine("Processing Comments.");
+            //processing
+            foreach(var Comment in TextFromFile) // loops through each line
+            {
+                //Console.WriteLine(Comment);
+                var newString = CleanUpHtml(Comment.ToLower());
+                newString = CleanUpText(newString);
+                
+                for (int i = minNWordGram; i <= maxNWordGram; i++)
+                {
+                    //Console.WriteLine($"Processing {i} word N-grams...");
+                    RowProcessor(i, newString);
+                }
+            }
+
+            Console.WriteLine("Starting to write to file...");
+            //dealing with results
+            foreach (KeyValuePair<string, int> entry in _nGramCounts.OrderBy(o => o.Key))
+            {
+                if (entry.Value <= minOccurences) continue;
+                File.AppendAllText(outputFileName, $"{entry.Key},{entry.Value}" + "\n");
+            }
+            Console.WriteLine("File writing complete.");
+
+            Process.Start(outputFileName);
+
+        }
+
+        string CleanUpHtml(string stringToClean)
+        {
+            stringToClean = Regex.Replace(stringToClean, @"<[^>]*>", " "); // non-escaped html tags to space
+            stringToClean = Regex.Replace(stringToClean, @"\&amp\;lt\;", "<"); // &< to <
+            stringToClean = Regex.Replace(stringToClean, @"\&amp\;gt\;", ">"); // &> to >
+            stringToClean = Regex.Replace(stringToClean, @"\<.*\/\>", " "); // stuff between tags to space
+            stringToClean = Regex.Replace(stringToClean, @"\&[a-z]+\;?", " "); // any remaining escaped html
+            stringToClean = stringToClean.Replace((char)0xA0, ' ');
+            //File.AppendAllText(@"C:\Users\fishm\Desktop\test.txt", stringToClean + "\n");
+            //Console.WriteLine(stringToClean);
+            return stringToClean;
+        }
+
+        string CleanUpText(string stringToClean)
+        {
+            stringToClean = Regex.Replace(stringToClean, @"\d", " "); // periods not followed by number to space
+            stringToClean = Regex.Replace(stringToClean, @"[ ]+", " "); // multiple spaces to single space
+
+            var updates = new List<FindReplace>()
+            {
+                              new FindReplace("(", " "),
+                new FindReplace(")", " "),
+                new FindReplace(" district ", " sasd "),
+                new FindReplace(" res ", " caller "),
+                new FindReplace(" resident "," caller "),
+                new FindReplace(" low lat "," lowlat "),
+                new FindReplace(" lower lat "," lowlat "),
+                new FindReplace(" lower lateral ", " lowlat "),
+                new FindReplace(" ll ", " lowlat "),
+                new FindReplace(" low lateral ", " lowlat "),
+                new FindReplace(" lat launch ", "lat_launch "),
+                new FindReplace(" lateral launch ", "lat_launch "),
+                new FindReplace(" see snake ", " "),
+                new FindReplace(" cp "," caller "),
+                new FindReplace(" method ", " method_"),
+                new FindReplace(" and a ", " method_a "),
+                new FindReplace(" and b ", " method_b "),
+                new FindReplace(" and k ", " method_k "),
+                new FindReplace(" week ", " week(s) "),
+                new FindReplace(" weeks "," week(s) "),
+                new FindReplace(" tvi ", " tv "),
+                new FindReplace(" tved ", " tvd "),
+                new FindReplace(" c/o ", " cleanout "),
+                new FindReplace(" co ", " cleanout "),
+                new FindReplace(" clean out ", " cleanout "),
+                new FindReplace(" private cleanout "," private_cleanout "),
+                new FindReplace(" sasd cleanout ", " sasd_cleanout "),
+                new FindReplace(" ml ", " mainline "),
+                new FindReplace(" m/l ", " mainline "),
+                new FindReplace(" main line ", " mainline "),
+                new FindReplace(" di ", " drainage_inlet "),
+                new FindReplace(" drainage inlet ", " drainage_inlet "),
+                new FindReplace(" inch ", " inch(es) "),
+                new FindReplace(" inchs ", " inch(es) "),
+                new FindReplace(" inches ", " inch(es) "),
+                new FindReplace( " finding ", " finding(s) "),
+                new FindReplace(" findings ", " finding(s) "),
+                new FindReplace(" dig up", " dig_up "),
+                new FindReplace(" dug up ", " dug_up "),
+                new FindReplace(" coi ", " cleanout_install "),
+                new FindReplace(" cor ", " cleanout_replace "),
+                new FindReplace(" cp ", " caller "),
+                new FindReplace(" man hole ", " manhole "),
+                new FindReplace(" mh ", " manhole "),
+                new FindReplace(" pic ", " photo(s) "),
+                new FindReplace(" pics ", " photo(s) "),
+                new FindReplace(" photo ", " photo(s) "),
+                new FindReplace(" photos ", " photo(s) "),
+                new FindReplace(" picture ", " photo(s) "),
+                new FindReplace(" pictures ", " photo(s) "),
+                new FindReplace(" pix ", " photo(s) "),
+                new FindReplace(" work order ", " workorder(s) "),
+                new FindReplace(" work orders ", " workorder(s) "),
+                new FindReplace(" wos ", " workorder(s) "),
+                new FindReplace(" wo ", " workorder(s) "),
+                new FindReplace(" sr ", " servicerequest(s) "),
+                new FindReplace(" srs ", "servicerequest(s) "),
+                new FindReplace(" s/r ", " servicerequest(s) "),
+                new FindReplace(" service request ", " servicerequest(s) "),
+                new FindReplace(" service requests ", " servicerequest(s) "),
+                new FindReplace(" asset ", " asset(s) "),
+                new FindReplace(" assets ", " asset(s) "),
+                new FindReplace(" w ", " "),
+                new FindReplace(" x ", " "),
+                new FindReplace(" a ", " "),
+                new FindReplace(" an ", " "),
+                new FindReplace(" and ", " "),
+                new FindReplace(" gal ", " gallon(s) "),
+                new FindReplace(" gallons ", " gallon(s) "),
+                new FindReplace(" the ", " "),
+                new FindReplace(" private plumber "," plumber "),
+                
+                new FindReplace(" ft ", " "),
+                new FindReplace(" to contact "," to call "),
+                //new FindReplace(" to ", " "),
+                new FindReplace("/", " "),
+                new FindReplace(":", " "),
+                new FindReplace("'", ""),
+                new FindReplace("=", " "),
+                new FindReplace("*", " "),
+                new FindReplace("#", " "),
+                new FindReplace("@", " "),
+  
+                new FindReplace(",", " "),
+                new FindReplace(".", " "),
+                new FindReplace("-", " ")
+                
+            };
+            
+            foreach(var update in updates)
+            {
+                stringToClean = stringToClean.Replace(update.Find, update.Replace);
+            }
+
+            return stringToClean;
+        }
+
+        private void RowProcessor(int wordsInNGram, string toProcess)
+        {
+            // braek doen into an array
+            var wordarray = toProcess.Split(new []{ ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (wordarray.Length < wordsInNGram) //if there aren't enough words, bail
+                return;
+
+            // operate on the array
+            for (int wordIdx = 0; wordIdx <= wordarray.Length-wordsInNGram; wordIdx++)
+            {
+                var nGram = string.Empty;
+                for(int nGramIdx = wordIdx; nGramIdx < wordIdx+wordsInNGram; nGramIdx++)
+                {
+                    nGram += wordarray[nGramIdx] + (nGramIdx != wordIdx+wordsInNGram-1 ? " " : string.Empty);
+                    // create phrase (n-gram)
+                }
+
+                //Console.WriteLine(nGram);
+                // check if it's in dictionary, if so add to count
+                int value;
+                _nGramCounts.TryGetValue(nGram, out value);
+                _nGramCounts[nGram] = value+1;
+            }
+
+
+
+        }
+    }
+}
