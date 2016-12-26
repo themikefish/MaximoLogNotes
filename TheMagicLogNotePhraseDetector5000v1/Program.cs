@@ -27,8 +27,22 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
             var maxNWordGram = 8;
             var minOccurences = 50;
 
-            var outputFileName = $@"C:\Users\fishm\Desktop\{DateTime.Now:yyyyMMddHHmmss}_testOutput.csv";
-            var pathToTextFile = @"C:\Users\fishm\Desktop\DUMP.csv";
+            var baseDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            var inputDirectory = Path.Combine(baseDirectory, "WorkFiles");
+            var outputDirectory = Path.Combine(inputDirectory, "Output");
+            
+            Directory.CreateDirectory(outputDirectory);
+            Directory.EnumerateFiles(outputDirectory).ToList().ForEach(f => File.Delete(f));
+
+
+            var outputFileName = Path.Combine(outputDirectory, $@"{DateTime.Now:yyyyMMddHHmmss}_testOutput.csv");
+            var pathToTextFile = Path.Combine(inputDirectory, @"DUMP.csv");
+
+            if (!File.Exists(pathToTextFile))
+            {
+                Console.WriteLine($"Please place a data file to process at {pathToTextFile}");
+                return;
+            }
             var TextFromFile = File.ReadAllLines(pathToTextFile); // reads all lines into atring array
 
             Console.WriteLine("Processing Comments.");
