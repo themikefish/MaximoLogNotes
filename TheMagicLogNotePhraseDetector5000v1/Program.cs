@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -22,8 +23,18 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
 
         private Program()  // the constructor. like a special kind of method. instanciates a program object
         {
-            //config
-            var minNWordGram = 3;
+            //get string from config file
+            var minWordsString = ConfigurationManager.AppSettings["minNGramWords"];
+            
+            //creating a correct datatype var, and trying to parse the string
+            int minNGramWords;
+            var minWordSuccess = int.TryParse(minWordsString, out minNGramWords);
+            if (!minWordSuccess)
+            {
+                Console.WriteLine($"{minWordsString} is not an int");
+                minNGramWords = 3; //default
+            }
+                
             var maxNWordGram = 8;
             var minOccurences = 50;
 
@@ -53,7 +64,7 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 var newString = CleanUpHtml(Comment.ToLower());
                 newString = CleanUpText(newString);
                 
-                for (int i = minNWordGram; i <= maxNWordGram; i++)
+                for (int i = minNGramWords; i <= maxNWordGram; i++)
                 {
                     //Console.WriteLine($"Processing {i} word N-grams...");
                     RowProcessor(i, newString);
