@@ -25,7 +25,7 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
         {
             //get string from config file
             var minWordsString = ConfigurationManager.AppSettings["minNGramWords"];
-            
+            var maxWordsString = ConfigurationManager.AppSettings["maxNGramWords"];
             //creating a correct datatype var, and trying to parse the string
             int minNGramWords;
             var minWordSuccess = int.TryParse(minWordsString, out minNGramWords);
@@ -34,16 +34,23 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 Console.WriteLine($"{minWordsString} is not an int");
                 minNGramWords = 3; //default
             }
-                
-            var maxNWordGram = 8;
-            var minOccurences = 50;
+
+            int maxNGramWords;
+            var maxWordSuccess = int.TryParse(maxWordsString, out maxNGramWords);
+            if (!maxWordSuccess)
+            {
+                Console.WriteLine($"{maxWordsString} is not an int");
+                maxNGramWords = 8; //default
+            }
+   
+            var minOccurences = 100;
 
             var baseDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             var inputDirectory = Path.Combine(baseDirectory, "WorkFiles");
             var outputDirectory = Path.Combine(inputDirectory, "Output");
             
             Directory.CreateDirectory(outputDirectory);
-            Directory.EnumerateFiles(outputDirectory).ToList().ForEach(f => File.Delete(f));
+            //Directory.EnumerateFiles(outputDirectory).ToList().ForEach(f => File.Delete(f));
 
 
             var outputFileName = Path.Combine(outputDirectory, $@"{DateTime.Now:yyyyMMddHHmmss}_testOutput.csv");
@@ -64,7 +71,7 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 var newString = CleanUpHtml(Comment.ToLower());
                 newString = CleanUpText(newString);
                 
-                for (int i = minNGramWords; i <= maxNWordGram; i++)
+                for (int i = minNGramWords; i <=maxNGramWords; i++)
                 {
                     //Console.WriteLine($"Processing {i} word N-grams...");
                     RowProcessor(i, newString);
@@ -118,6 +125,7 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 new FindReplace(" lateral launch ", "lat_launch "),
                 new FindReplace(" see snake ", " "),
                 new FindReplace(" cp "," caller "),
+                    new FindReplace(" c p "," caller "),
                 new FindReplace(" method ", " method_"),
                 new FindReplace(" and a ", " method_a "),
                 new FindReplace(" and b ", " method_b "),
