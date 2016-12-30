@@ -43,7 +43,7 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 maxNGramWords = 8; //default
             }
    
-            var minOccurences = 100;
+            var minOccurences = 20;
 
             var baseDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             var inputDirectory = Path.Combine(baseDirectory, "WorkFiles");
@@ -90,16 +90,20 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
             Process.Start(outputFileName);
 
         }
-
-        string CleanUpHtml(string stringToClean)
+            string CleanUpHtml(string stringToClean)
         {
+
+            stringToClean = Regex.Replace(stringToClean, @"\s+", " "); // any whitespace character (equal to [\r\n\t\f\v ])
+            stringToClean = stringToClean.Replace((char)0xA0, ' '); // non-breaking white space
             stringToClean = Regex.Replace(stringToClean, @"<[^>]*>", " "); // non-escaped html tags to space
             stringToClean = Regex.Replace(stringToClean, @"\&amp\;lt\;", "<"); // &< to <
             stringToClean = Regex.Replace(stringToClean, @"\&amp\;gt\;", ">"); // &> to >
-            stringToClean = Regex.Replace(stringToClean, @"\<.*\/\>", " "); // stuff between tags to space
+            stringToClean = Regex.Replace(stringToClean, @"\<.*\/\>", " "); // stuff between tags to space    
+            stringToClean = Regex.Replace(stringToClean, @"\[.*\/\]", " "); // stuff between brackets to space
+            stringToClean = Regex.Replace(stringToClean, @"\{.*\/\}", " "); // stuff between curly braces to space
             stringToClean = Regex.Replace(stringToClean, @"\&[a-z]+\;?", " "); // any remaining escaped html
-            stringToClean = stringToClean.Replace((char)0xA0, ' ');
-            //File.AppendAllText(@"C:\Users\fishm\Desktop\test.txt", stringToClean + "\n");
+                                  
+            File.AppendAllText(@"C:\Users\fishm\Desktop\stringToClean.txt", stringToClean + "\n"); // writes to file
             //Console.WriteLine(stringToClean);
             return stringToClean;
         }
@@ -111,11 +115,17 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
 
             var updates = new List<FindReplace>()
             {
-                              new FindReplace("(", " "),
+                // new FindReplace("\t", " "),  // redundant me thinks
+                new FindReplace("(", " "),
                 new FindReplace(")", " "),
+
                 new FindReplace(" district ", " sasd "),
+
                 new FindReplace(" res ", " caller "),
                 new FindReplace(" resident "," caller "),
+                new FindReplace(" cp "," caller "),
+                new FindReplace(" c p "," caller "),
+                             
                 new FindReplace(" low lat "," lowlat "),
                 new FindReplace(" lower lat "," lowlat "),
                 new FindReplace(" lower lateral ", " lowlat "),
@@ -123,39 +133,78 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 new FindReplace(" low lateral ", " lowlat "),
                 new FindReplace(" lat launch ", "lat_launch "),
                 new FindReplace(" lateral launch ", "lat_launch "),
-                new FindReplace(" see snake ", " "),
-                new FindReplace(" cp "," caller "),
-                    new FindReplace(" c p "," caller "),
-                new FindReplace(" method ", " method_"),
+
+                new FindReplace(" see snake camera ", " camera "),
+                new FindReplace(" see snake ", " camera "),
+
+                new FindReplace("method ", " method_"),
+                new FindReplace("methods ", " method_"),
+                new FindReplace("method-", " method_"),
                 new FindReplace(" and a ", " method_a "),
                 new FindReplace(" and b ", " method_b "),
                 new FindReplace(" and k ", " method_k "),
+                new FindReplace(" b)", " method_b "),
+                new FindReplace(" k)", " method_k "),
+                new FindReplace(",b )", " method_b "),
+                new FindReplace(",k )", " method_k "),
+
                 new FindReplace(" week ", " week(s) "),
                 new FindReplace(" weeks "," week(s) "),
+
                 new FindReplace(" tvi ", " tv "),
                 new FindReplace(" tved ", " tvd "),
+
                 new FindReplace(" c/o ", " cleanout "),
                 new FindReplace(" co ", " cleanout "),
                 new FindReplace(" clean out ", " cleanout "),
                 new FindReplace(" private cleanout "," private_cleanout "),
                 new FindReplace(" sasd cleanout ", " sasd_cleanout "),
+                new FindReplace(" coi ", " cleanout_install "),
+                new FindReplace(" cor ", " cleanout_replace "),
+
+
                 new FindReplace(" ml ", " mainline "),
                 new FindReplace(" m/l ", " mainline "),
                 new FindReplace(" main line ", " mainline "),
+
                 new FindReplace(" di ", " drainage_inlet "),
                 new FindReplace(" drainage inlet ", " drainage_inlet "),
+
                 new FindReplace(" inch ", " inch(es) "),
                 new FindReplace(" inchs ", " inch(es) "),
                 new FindReplace(" inches ", " inch(es) "),
+
                 new FindReplace( " finding ", " finding(s) "),
                 new FindReplace(" findings ", " finding(s) "),
+
                 new FindReplace(" dig up", " dig_up "),
                 new FindReplace(" dug up ", " dug_up "),
-                new FindReplace(" coi ", " cleanout_install "),
-                new FindReplace(" cor ", " cleanout_replace "),
-                new FindReplace(" cp ", " caller "),
-                new FindReplace(" man hole ", " manhole "),
+       
+   
+                new FindReplace(" usage "," use "),
+
+                new FindReplace(" functioning ", " working "),
+                new FindReplace(" working properly ", " working "),
+
+                new FindReplace(" carson box ", " carson_box "),
+                new FindReplace(" valve box ", " valve_box "),
+
+                new FindReplace(" non recoverable ", " nonrecoverable "),
+
+                new FindReplace(" upon my arrival ", " on arrival "),
+
+                new FindReplace(" did not ", " didnt "),
+                new FindReplace(" can not ", "cannot"),
+
+                new FindReplace(" not holding ", " not_holding "),
+                new FindReplace(" not ongoing ", " not_ongoing "),
+
+                new FindReplace(" m h ", " manhole "),
                 new FindReplace(" mh ", " manhole "),
+                new FindReplace(" m/h ", " manhole "),
+                new FindReplace(" m-h ", " manhole "),
+                new FindReplace(" man hole ", " manhole "),
+
                 new FindReplace(" pic ", " photo(s) "),
                 new FindReplace(" pics ", " photo(s) "),
                 new FindReplace(" photo ", " photo(s) "),
@@ -163,30 +212,64 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 new FindReplace(" picture ", " photo(s) "),
                 new FindReplace(" pictures ", " photo(s) "),
                 new FindReplace(" pix ", " photo(s) "),
+
                 new FindReplace(" work order ", " workorder(s) "),
                 new FindReplace(" work orders ", " workorder(s) "),
                 new FindReplace(" wos ", " workorder(s) "),
                 new FindReplace(" wo ", " workorder(s) "),
+
                 new FindReplace(" sr ", " servicerequest(s) "),
                 new FindReplace(" srs ", "servicerequest(s) "),
                 new FindReplace(" s/r ", " servicerequest(s) "),
                 new FindReplace(" service request ", " servicerequest(s) "),
                 new FindReplace(" service requests ", " servicerequest(s) "),
+
                 new FindReplace(" asset ", " asset(s) "),
                 new FindReplace(" assets ", " asset(s) "),
+
+                new FindReplace( " were not ", " were_not "),
                 new FindReplace(" w ", " "),
                 new FindReplace(" x ", " "),
                 new FindReplace(" a ", " "),
                 new FindReplace(" an ", " "),
                 new FindReplace(" and ", " "),
+
                 new FindReplace(" gal ", " gallon(s) "),
+                new FindReplace(" gallon ", " gallon(s) "),
                 new FindReplace(" gallons ", " gallon(s) "),
                 new FindReplace(" the ", " "),
                 new FindReplace(" private plumber "," plumber "),
-                
                 new FindReplace(" ft ", " "),
                 new FindReplace(" to contact "," to call "),
-                //new FindReplace(" to ", " "),
+                new FindReplace(" stand by ", " standby "),
+                new FindReplace(" standby crew ", " crew "),
+                new FindReplace(" sasd crew "," crew "),
+
+                new FindReplace("FALSE", " "),
+                new FindReplace("TRUE", " "),
+                new FindReplace("gt;", " "),
+                new FindReplace("lt;", " "),
+                new FindReplace("unhidewhenused", " "),
+                new FindReplace("qformat=", " "),
+                new FindReplace("quot;true", " "),
+                new FindReplace("quot;false", " "),
+                new FindReplace("quot;heading", " "),
+                new FindReplace("quot;name", " "),
+                new FindReplace("quot;", " "),
+                new FindReplace("amp;", " "),
+                new FindReplace("amp; w", " "),
+                new FindReplace("amp; name", " "),
+                new FindReplace("w lsdexception locked", " "),
+                new FindReplace("w lsdexception", " "),
+                new FindReplace("<! [if ]", " "),
+                new FindReplace(" [if ", " "),
+                new FindReplace(" gte ", " "),
+                new FindReplace(" mso ", " "),
+                new FindReplace(" < ! ", " "),
+                new FindReplace(" defpriority ", " "),
+                new FindReplace(" def false ", " "),
+                new FindReplace(" latentstylecount ", " "),
+
                 new FindReplace("/", " "),
                 new FindReplace(":", " "),
                 new FindReplace("'", ""),
@@ -194,11 +277,9 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
                 new FindReplace("*", " "),
                 new FindReplace("#", " "),
                 new FindReplace("@", " "),
-  
                 new FindReplace(",", " "),
                 new FindReplace(".", " "),
-                new FindReplace("-", " ")
-                
+                new FindReplace("-", " ")                
             };
             
             foreach(var update in updates)
@@ -211,7 +292,7 @@ namespace TheMagicLogNotePhraseDetector5000v1 // for organization purposes
 
         private void RowProcessor(int wordsInNGram, string toProcess)
         {
-            // braek doen into an array
+            // braek down into an array
             var wordarray = toProcess.Split(new []{ ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
             if (wordarray.Length < wordsInNGram) //if there aren't enough words, bail
